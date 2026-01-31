@@ -4,7 +4,7 @@
 DEBUG_MODE = True
 
 # 交互快捷键
-KEY_LIKE = "z"          # 点赞/取消点赞
+KEY_LIKE = "Z"          # 点赞/取消点赞
 KEY_NEXT = "ArrowUp"    # 切换上一条
 
 # 随机等待 (秒)
