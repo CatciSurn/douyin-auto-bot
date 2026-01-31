@@ -22,12 +22,13 @@
 
 ## 🚀 快速开始
 1. 去WxPusher申请你自己的WX_APP_TOKEN和WX_UID
-2. 将本项目文件全部拷贝到 VirtualBox 的 win 10 Pro 系统中。如果是拷贝到如图所示的“网络”里，建议将项目文件剪贴到虚拟机的C盘根目录
+2. 设置虚拟机的分辨率为1920x1080
+3. 将本项目文件全部拷贝到 VirtualBox 的 win 10 Pro 系统中。如果是拷贝到如图所示的“网络”里，建议将项目文件剪贴到虚拟机的C盘根目录
 ![alt text](image.png)
-3. 在 VirtualBox 中浏览器打开https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe
-4. 下载完成后安装，除了需要勾选"Add Miniconda3 to my PATH environment variable"外，缺省安装。
-5. 在 VirtualBox 的miniconda中运行`pip install pyautogui playwright pillow -i https://pypi.tuna.tsinghua.edu.cn/simple`
-6. 在 VirtualBox 的miniconda中运行`playwright install chromium`
+4. 在 VirtualBox 中浏览器打开https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe
+5. 下载完成后安装，除了需要勾选"Add Miniconda3 to my PATH environment variable"外，缺省安装。
+6. 在 VirtualBox 的miniconda中运行`pip install pyautogui playwright pillow -i https://pypi.tuna.tsinghua.edu.cn/simple`
+7. 在 VirtualBox 的miniconda中运行`playwright install chromium`
 
 ### 2. 启动浏览器 (调试模式)
 
@@ -66,8 +67,5 @@ python get_coord.py
 # 项目架构
 
 **2026_1_23_1.log**: 日志文件
+
 **get_coord.py**: 若项目预先设置好的上边距和左边距不合要求，可以自行测量。
-**2026_1_23_1.log**: 日志文件
-**2026_1_23_1.log**: 日志文件
-**2026_1_23_1.log**: 日志文件
-**2026_1_23_1.log**: 日志文件
