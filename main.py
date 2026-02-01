@@ -8,8 +8,8 @@ import debug_utils as tool
 import notify_utils as notify
 
 # ================= 配置区域 =================
-HEART_X = 1872
-HEART_Y = 437
+HEART_X = 1106
+HEART_Y = 387
 
 def is_red(r, g, b):
     # 红心判定阈值
@@ -18,6 +18,7 @@ def is_red(r, g, b):
 
 def run_bot():
     tool.log("[INFO] Connecting to Edge Browser...")
+    tool.log("[INFO] Please make sure that the page you want to like is on the first of all the pages!")
     
     with sync_playwright() as p:
         try:
