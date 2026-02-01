@@ -12,6 +12,7 @@ HEART_X = 1872
 HEART_Y = 437
 
 def is_red(r, g, b):
+    # 红心判定阈值
     return r > 200 and g < 150 and b < 150
 # ===========================================
 
@@ -22,14 +23,11 @@ def run_bot():
         try:
             # 连接浏览器
             browser = p.chromium.connect_over_cdp("http://localhost:9222")
-            # 获取当前上下文的第一个页面
             context = browser.contexts[0]
             if not context.pages:
                 tool.log("[ERROR] No pages found. Please open a tab.")
                 return
             page = context.pages[0]
-            
-            # 【关键修复1】强制将页面前置，确保活跃
             page.bring_to_front()
             
         except Exception as e:
@@ -50,16 +48,9 @@ def run_bot():
 
         success_count = 0
 
-        # 【关键修复2】定义一个聚焦函数
-        # 抖音的视频容器通常是这个类名，或者我们直接聚焦 body 也可以尝试
-        # 但最稳妥的是聚焦到视频容器上
         def ensure_focus():
             try:
-                # 尝试聚焦到视频播放器外层容器 (抖音网页版常见容器)
-                # 如果这个selector不起作用，可以换成 'body' 或者 '#slider-video'
                 page.focus("body") 
-                # 或者显式点击一下屏幕中心(Playwright层面的点击，不抢鼠标)
-                # page.mouse.click(960, 540) 
             except Exception:
                 pass
 
@@ -67,48 +58,81 @@ def run_bot():
             while True:
                 if success_count >= target_limit:
                     tool.log(f"\n[SUCCESS] KPI Reached! ({success_count}/{target_limit})")
-                    tool.log("[INFO] Sending notification...")
                     notify.send_all(success_count)
                     break
 
-                # ================= 1. 取色判断 =================
-                is_liked = False
-                try:
-                    # 使用 PyAutoGUI 进行取色（这是不抢焦点的）
-                    r, g, b = pyautogui.pixel(HEART_X, HEART_Y)
-                    if is_red(r, g, b):
-                        is_liked = True
-                except Exception:
-                    is_liked = False
-
-                # ================= 2. 执行操作 =================
-                
-                # 【关键修复3】操作前确保焦点
+                # 确保焦点
                 ensure_focus()
 
-                if is_liked:
-                    tool.log(f"[{success_count+1}/{target_limit}] Status: [Liked] -> Re-Like")
-                    # 取消赞
-                    page.keyboard.type("z") 
-                    time.sleep(random.uniform(0.5, 0.8)) # 稍微延长中间间隔，防止太快被吞
-                    # 重新赞
-                    page.keyboard.type("z")
+                # ================= 1. 初始状态检测 =================
+                initial_liked = False
+                try:
+                    r, g, b = pyautogui.pixel(HEART_X, HEART_Y)
+                    if is_red(r, g, b):
+                        initial_liked = True
+                except Exception:
+                    pass
+
+                # ================= 2. 执行点赞逻辑 =================
+                action_desc = ""
+                
+                if initial_liked:
+                    # 如果本来就是红的，为了活跃度，我们需要重赞 (取消 -> 点赞)
+                    action_desc = "Re-Like"
+                    page.keyboard.type("z") # 取消赞
+                    time.sleep(random.uniform(0.5, 0.8))
+                    page.keyboard.type("z") # 重新赞
                 else:
-                    tool.log(f"[{success_count+1}/{target_limit}] Status: [Not Liked] -> Like")
-                    # 点赞
+                    # 如果是白的，直接点赞
+                    action_desc = "Like"
                     page.keyboard.type("z")
 
-                success_count += 1
+                # ================= 3. 循环校验 (最多5次) =================
+                check_attempts = 0
+                max_checks = 5
+                final_status_ok = False
 
-                # ================= 3. 翻页 =================
+                while check_attempts < max_checks:
+                    time.sleep(0.8) # 等待UI动画完成
+                    
+                    try:
+                        # 检查当前颜色
+                        cr, cg, cb = pyautogui.pixel(HEART_X, HEART_Y)
+                        if is_red(cr, cg, cb):
+                            final_status_ok = True
+                            break # 只要变红了，就跳出校验循环
+                        else:
+                            # 还是白的，尝试补刀
+                            tool.log(f"[Retry {check_attempts+1}/{max_checks}] Heart is white, retrying click...")
+                            ensure_focus()
+                            page.keyboard.type("z")
+                    except Exception:
+                        pass
+                    
+                    check_attempts += 1
+
+                # ================= 4. 结果处理与计数 =================
+                if final_status_ok:
+                    success_count += 1
+                    tool.log(f"[{success_count}/{target_limit}] Status: [{action_desc}] Success (Checks: {check_attempts})")
+                else:
+                    # 超过5次还是失败
+                    current_url = page.url
+                    error_msg = f"点赞失败警告！视频URL: {current_url} 在尝试5次后红心仍未变红，请检查账号是否受限。"
+                    tool.log(f"[ERROR] {error_msg}")
+                    
+                    # 发送专门的报警通知 (复用 notify_utils 中的发送函数)
+                    # 这里假设 notify_utils 有单独发给手机的方法，或者直接用 send_wxpusher
+                    notify.send_wxpusher(error_msg) 
+                    
+                    # 失败不增加 success_count
+
+                # ================= 5. 翻页 =================
                 wait_time = random.uniform(config.WAIT_MIN, config.WAIT_MAX)
                 time.sleep(wait_time)
                 
-                # 翻页前也确保一下焦点，防止刚才的操作丢焦
                 ensure_focus()
                 page.keyboard.press(config.KEY_NEXT)
-                
-                # 等待视频加载
                 time.sleep(1.5)
 
         except KeyboardInterrupt:

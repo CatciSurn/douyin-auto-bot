@@ -29,20 +29,28 @@ def send_to_host_machine():
 
 def send_wxpusher(content):
     """发送微信通知 (基于 WxPusher)"""
-    if "这里填" in WX_APP_TOKEN or "这里填" in WX_UID:
+    if "你的" in WX_APP_TOKEN or "你的" in WX_UID:
         tool.log("⚠️ 未配置 WxPusher Token/UID，跳过手机通知")
         return
 
     url = "https://wxpusher.zjiecode.com/api/send/message"
     
-    # WxPusher 的标准请求格式
-    payload = {
-        "appToken": WX_APP_TOKEN,
-        "content": content,
-        "summary": "抖音任务完成汇报", # 消息卡片上的标题
-        "contentType": 1, # 1表示文本，2表示HTML
-        "uids": [WX_UID]  # 发给谁，可以是一个列表
-    }
+    if "点赞失败警告" in content:
+        payload = {
+            "appToken": WX_APP_TOKEN,
+            "content": content,
+            "summary": "点赞失败警告", # 消息卡片上的标题
+            "contentType": 1, # 1表示文本，2表示HTML
+            "uids": [WX_UID]  # 发给谁，可以是一个列表
+        }
+    else:
+        payload = {
+            "appToken": WX_APP_TOKEN,
+            "content": content,
+            "summary": "抖音任务完成汇报", # 消息卡片上的标题
+            "contentType": 1, # 1表示文本，2表示HTML
+            "uids": [WX_UID]  # 发给谁，可以是一个列表
+        }
     
     headers = {'Content-Type': 'application/json'}
 
